@@ -12,7 +12,9 @@ class BitStream{
         ofstream ofs;
         ifstream ifs;
     public:
+        BitStream();
         BitStream(const char* file, char op);
+        int open(const char* file, char op);
         int writeBit(uint8_t bit);
         int writeInteger(uint16_t integer,uint32_t numBits);
         int readInteger(uint32_t numBits);

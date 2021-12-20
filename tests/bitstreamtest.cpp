@@ -1,4 +1,4 @@
-#include "Bitstream.h"
+#include "../headers/Bitstream.h"
 int main(){
     BitStream obts("out.txt", 'w');
     BitStream ibts("in.txt", 'r');

@@ -222,7 +222,8 @@ void saveImage(string path,Mat image, uint8_t show = 1 ){
     imwrite(path, image);
 }
 int main(int argc, char** argv){
-    Mat image = imread("../Images/cao.jpg",IMG_COLOR);
+    // Mat image = imread("../Images/cao.jpg",IMG_COLOR);
+    Mat image = imread(argv[1], IMG_COLOR);
     Mat image_yuv = image;
     GolombCode gc_encoded("gc_encoded.txt",4,'w');
     //image RGB2YUV 
@@ -332,7 +333,8 @@ int main(int argc, char** argv){
     Mat histo_image_decompress = snrOnHisto(imageHisto(histoOut,entropyOut,2),snrQuantization);
     saveImage("../Images_Out/imagem_yuv.jpg",image_yuv);
 
-    saveImage("../Images_Out/imagem_yuv_out.jpg",image_yuv_out);
+    // saveImage("../Images_Out/imagem_yuv_out.jpg",image_yuv_out);
+    saveImage(argv[2], image_yuv_out);
     saveImage("../Images_Out/imagem_out.jpg",image_decompress);
     saveImage("../Histograms/histo_yuv_out.jpg",histo_image_yuv);
     saveImage("../Histograms/histo_out.jpg",histo_image_decompress);

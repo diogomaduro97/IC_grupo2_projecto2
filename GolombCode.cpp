@@ -18,6 +18,7 @@ GolombCode::GolombCode(const char* f, uint32_t mconst, char op){
 }
 void GolombCode::encode_file(const char* fileIn){
     // BitStream bifs(fileIn,'w');
+    ifstream ifs(fileIn);
     int count = 0;
     while(!ifs.eof()){
         char x = ifs.get();
@@ -36,7 +37,7 @@ void GolombCode::encode_file(const char* fileIn){
 
 }
 
-void GolombCode::encode_char(uint32_t x){
+void GolombCode::encode_int(uint32_t x){
     // BitStream bifs(file,'w');
     int count = 0;
     // cout << (uint16_t)x;

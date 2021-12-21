@@ -222,33 +222,38 @@ void saveImage(string path,Mat image, uint8_t show = 1 ){
     imwrite(path, image);
 }
 int main(int argc, char** argv){
-    Mat image = imread("../Images/croma.png",IMG_COLOR);
-    Mat image_yuv;
+    Mat image = imread("../Images/cao.jpg",IMG_COLOR);
+    Mat image_yuv = image;
     GolombCode gc_encoded("gc_encoded.txt",4,'w');
     //image RGB2YUV 
-    cvtColor(image,image_yuv,COLOR_BGR2YUV);
+    // cvtColor(image,image_yuv,COLOR_BGR2YUV);
     int before,after,now;
-    ofstream ofs("predict.txt");
-    gc_encoded.encode_char(image_yuv.rows);
-    gc_encoded.encode_char(image_yuv.cols);
+    ofstream ofs1("predict1.txt");
+    ofstream ofs2("predict2.txt");
+    gc_encoded.encode_int(image_yuv.rows);
+    gc_encoded.encode_int(image_yuv.cols);
     for (size_t channel = 0; channel < COLOR_CHANNELS; channel++){
         for(int r = 0; r < image_yuv.rows; r++){
         before = image_yuv.at<Vec3b>(r,0)[channel];
-        gc_encoded.encode_char(image_yuv.at<Vec3b>(r,0)[channel]);
+        gc_encoded.encode_int(image_yuv.at<Vec3b>(r,0)[channel]);
+        ofs1 << before << " ";
+
             for(int c= 1; c<image_yuv.cols; c++){
                     after = image_yuv.at<Vec3b>(r,c)[channel]; 
                     // image_yuv.at<Vec3b>(r,c)[channel] = 1;
                     now = before - image_yuv.at<Vec3b>(r,c)[channel];
+                    ofs1 << now << " ";
+
                     if(now < 0){
                         // image_yuv.at<Vec3b>(r,c)[channel] = ((now*-1)<<1)+1;
-                        gc_encoded.encode_char(((now*-1)<<1)+1);
+                        gc_encoded.encode_int(((now*-1)<<1)+1);
                         // int x = image_yuv.at<Vec3b>(r,c)[channel];
                         // int y = ((now*-1)<<1)+1;
                         // ofs << x << " : " << y << " | ";
                         // cout << image_yuv.at<Vec3b>(r,c)[channel] << " : " << ((now*-1)<<1)+1 << endl;
                     }else{
                         // image_yuv.at<Vec3b>(r,c)[channel] = now << 1;
-                        gc_encoded.encode_char((now << 1));
+                        gc_encoded.encode_int((now << 1));
                         
                         // int x = image_yuv.at<Vec3b>(r,c)[channel];
                         // int y = now << 1;
@@ -258,6 +263,7 @@ int main(int argc, char** argv){
                     before = after;            
                     // image_yuv.at<Vec3b>(r,c)[channel] = image_yuv.at<Vec3b>(r,c)[channel]<<SHIFT_BITS;            
             }
+            ofs1 << endl;
             // ofs << endl;
             // image_yuv.at<Vec3b>(r,c)[0] = 200;
         }
@@ -274,12 +280,12 @@ int main(int argc, char** argv){
     for (size_t channel = 0; channel < COLOR_CHANNELS; channel++){
         for(int r = 0; r < rows; r++){
         image_yuv_out.at<Vec3b>(r,0)[channel] = gc_decoded.decode_int();
-        ofs << (uint32_t)image_yuv_out.at<Vec3b>(r,0)[channel] << " ";
+        ofs2 << (uint32_t)image_yuv_out.at<Vec3b>(r,0)[channel] << " ";
         // gc_decoded.encode_char(image_yuv_out.at<Vec3b>(r,0)[channel]);
             for(int c= 1; c<cols; c++){
                     uint32_t now = gc_decoded.decode_int();;
                     // image_yuv_out.at<Vec3b>(r,c)[channel] = (uint8_t)gc_decoded.decode_int(); 
-                    ofs << now << " ";
+                    ofs2 << now << " ";
                     // image_yuv_out.at<Vec3b>(r,c)[channel] = 1;
                     if( now & 0x01){
                         image_yuv_out.at<Vec3b>(r,c)[channel] = (uint8_t)(now >> 1) + image_yuv_out.at<Vec3b>(r,c-1)[channel];
@@ -298,13 +304,13 @@ int main(int argc, char** argv){
            
                     // image_yuv.at<Vec3b>(r,c)[channel] = image_yuv.at<Vec3b>(r,c)[channel]<<SHIFT_BITS;            
             }
-            ofs << endl;
+            ofs2 << endl;
             // image_yuv.at<Vec3b>(r,c)[0] = 200;
         }
     }
-    Mat image_yuv2bgr;
-    cvtColor(image_yuv_out, image_yuv2bgr,COLOR_YUV2BGR);
-    saveImage("../Images_Out/imagedecodedout.jpg", image_yuv2bgr);
+    // Mat image_yuv2bgr;
+    // cvtColor(image_yuv_out, image_yuv2bgr,COLOR_YUV2BGR);
+    // saveImage("../Images_Out/imagedecodedout.jpg", image_yuv2bgr);
     // image quantization 
     Mat image_compress = compress(image,IMG_COLOR,SHIFT_BITS);
     Mat image_decompress = decompress(image_compress,IMG_COLOR,SHIFT_BITS);

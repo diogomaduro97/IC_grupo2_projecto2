@@ -221,16 +221,8 @@ void saveImage(string path,Mat image, uint8_t show = 1 ){
     }
     imwrite(path, image);
 }
-<<<<<<< HEAD
 void losslessCompress(const char* output_file, Mat image,uint8_t format = 1){
     GolombCode gc_encoded(output_file,4,'w');
-=======
-int main(int argc, char** argv){
-    // Mat image = imread("../Images/cao.jpg",IMG_COLOR);
-    Mat image = imread(argv[1], IMG_COLOR);
-    Mat image_yuv = image;
-    GolombCode gc_encoded("gc_encoded.txt",4,'w');
->>>>>>> 6e350c15a08d3d13ce4122be8ef6863d16128d09
     //image RGB2YUV 
     // cvtColor(image,image_yuv,COLOR_BGR2YUV);
     int before,after,now;
@@ -360,13 +352,9 @@ int main(int argc, char** argv){
     Mat histo_image_lossless = snrOnHisto(imageHisto(histoOutYUV,entropyOutYUV,6),snrYUV);
     Mat histo_image_decompress = snrOnHisto(imageHisto(histoOut,entropyOut,2),snrQuantization);
 
-<<<<<<< HEAD
     // saveImage("../Images_Out/imagem_yuv_out.jpg",image_lossless_out);
     saveImage("../Images_Out/imagem_yuv.jpg",image_lossless);
-=======
-    // saveImage("../Images_Out/imagem_yuv_out.jpg",image_yuv_out);
-    saveImage(argv[2], image_yuv_out);
->>>>>>> 6e350c15a08d3d13ce4122be8ef6863d16128d09
+
     saveImage("../Images_Out/imagem_out.jpg",image_decompress);
     saveImage("../Histograms/histo_yuv_out.jpg",histo_image_lossless);
     saveImage("../Histograms/histo_out.jpg",histo_image_decompress);

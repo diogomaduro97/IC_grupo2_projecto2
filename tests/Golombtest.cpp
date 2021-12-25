@@ -4,9 +4,17 @@ int main(int argc, char** argv){
     int num;
 
     long conv = strtol(argv[1], &p, 10);
-    GolombCode Gc("in.txt",conv);
-    Gc.encode_file("out2.txt");
-    Gc.decode_text("out3.txt","out2.txt");
+    GolombCode Gc_encode("out.txt",conv,'w');
+    for(int i = 0 ; i < 5; i++){
+        Gc_encode.encode_int('a');
+    }
+    Gc_encode.close();
+    GolombCode Gc_decode("out.txt",conv,'r');
+    // Gc_encode.close();
+    for(int i = 0 ; i< 5 ; i++){
+        Gc_decode.decode_int();
+
+    }
     cout << "Done" << endl;
 
 }

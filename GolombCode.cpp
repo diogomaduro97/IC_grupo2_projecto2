@@ -8,7 +8,9 @@ using namespace std;
 GolombCode::GolombCode(const char* f, uint32_t mconst, char op){
     m = mconst;
     rMax = log2(m-1);
+    operation = op;
     if(op == 'w'){  
+        test.open("golombencoded.txt");
         // ifs.open(f1);
         bifs.open(f,'w');
     }else{
@@ -37,8 +39,9 @@ void GolombCode::encode_file(const char* fileIn){
 
 }
 
-void GolombCode::encode_int(uint32_t x){
+void GolombCode::encode_int(uint32_t x,string x2){
     // BitStream bifs(file,'w');
+
     int count = 0;
     // cout << (uint16_t)x;
     uint32_t q = x/m;
@@ -46,11 +49,14 @@ void GolombCode::encode_int(uint32_t x){
     uint32_t r = x-q*m;
     for(int i=0; i<q; i++){
         bifs.writeBit(0);
+        test << "0";
         // cout << "0" ;
     }
     bifs.writeBit(1);
+    test << "1";
     // cout<< "1";
     bifs.writeInteger(r,rMax);
+    test << r << x2;
     // cout<< r<< endl;
 }
 void GolombCode::decode_text(const char* fileOut){
@@ -98,3 +104,13 @@ uint32_t GolombCode::decode_int(){
     }
     return 0;
 }
+void GolombCode::close(){
+    if(operation == 'w'){
+        // ofs << buffer;
+        // cout << buffer;
+        bifs.close();
+    }else{
+        bofs.close();
+    }
+}
+

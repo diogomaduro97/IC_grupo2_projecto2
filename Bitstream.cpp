@@ -79,7 +79,7 @@ int BitStream::readBit(){
         index_buffer = MOST_SIGNIFICANT_BIT;
         buffer = ifs.get();
         if(ifs.eof()){
-            // cout << "cant read more bytes" << endl;
+            cout << "cant read more bytes" << endl;
             ifs.close();
             return -2;
         }

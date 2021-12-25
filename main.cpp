@@ -221,80 +221,90 @@ void saveImage(string path,Mat image, uint8_t show = 1 ){
     }
     imwrite(path, image);
 }
-int main(int argc, char** argv){
-    Mat image = imread("../Images/cao.jpg",IMG_COLOR);
-    Mat image_yuv = image;
-    GolombCode gc_encoded("gc_encoded.txt",4,'w');
+void losslessCompress(const char* output_file, Mat image,uint8_t format = 1){
+    GolombCode gc_encoded(output_file,4,'w');
     //image RGB2YUV 
     // cvtColor(image,image_yuv,COLOR_BGR2YUV);
     int before,after,now;
     ofstream ofs1("predict1.txt");
-    ofstream ofs2("predict2.txt");
-    gc_encoded.encode_int(image_yuv.rows);
-    gc_encoded.encode_int(image_yuv.cols);
+    gc_encoded.encode_int(image.rows, "\n");
+    gc_encoded.encode_int(image.cols, "\n");
+    gc_encoded.encode_int(format, "\n");
+    
     for (size_t channel = 0; channel < COLOR_CHANNELS; channel++){
-        for(int r = 0; r < image_yuv.rows; r++){
-        before = image_yuv.at<Vec3b>(r,0)[channel];
-        gc_encoded.encode_int(image_yuv.at<Vec3b>(r,0)[channel]);
+        for(int r = 0; r < image.rows; r++){
+        before = image.at<Vec3b>(r,0)[channel];
+        gc_encoded.encode_int(image.at<Vec3b>(r,0)[channel]);
         ofs1 << before << " ";
 
-            for(int c= 1; c<image_yuv.cols; c++){
-                    after = image_yuv.at<Vec3b>(r,c)[channel]; 
-                    // image_yuv.at<Vec3b>(r,c)[channel] = 1;
-                    now = before - image_yuv.at<Vec3b>(r,c)[channel];
+            for(int c= 1; c<image.cols; c++){
+                    after = image.at<Vec3b>(r,c)[channel]; 
+                    // image.at<Vec3b>(r,c)[channel] = 1;
+                    now = before - image.at<Vec3b>(r,c)[channel];
                     ofs1 << now << " ";
 
                     if(now < 0){
-                        // image_yuv.at<Vec3b>(r,c)[channel] = ((now*-1)<<1)+1;
-                        gc_encoded.encode_int(((now*-1)<<1)+1);
-                        // int x = image_yuv.at<Vec3b>(r,c)[channel];
+                        // image.at<Vec3b>(r,c)[channel] = ((now*-1)<<1)+1;
+                        if(c+1 == image.cols)
+                            gc_encoded.encode_int(((now*-1)<<1)+1,"\n");
+                        else
+                            gc_encoded.encode_int(((now*-1)<<1)+1);
+                        // int x = image.at<Vec3b>(r,c)[channel];
                         // int y = ((now*-1)<<1)+1;
                         // ofs << x << " : " << y << " | ";
-                        // cout << image_yuv.at<Vec3b>(r,c)[channel] << " : " << ((now*-1)<<1)+1 << endl;
+                        // cout << image.at<Vec3b>(r,c)[channel] << " : " << ((now*-1)<<1)+1 << endl;
                     }else{
-                        // image_yuv.at<Vec3b>(r,c)[channel] = now << 1;
-                        gc_encoded.encode_int((now << 1));
-                        
-                        // int x = image_yuv.at<Vec3b>(r,c)[channel];
+                        // image.at<Vec3b>(r,c)[channel] = now << 1;
+                        if(c+1 == image.cols)
+                            gc_encoded.encode_int((now << 1),"\n");
+                        else
+                            gc_encoded.encode_int((now << 1));
+                        // int x = image.at<Vec3b>(r,c)[channel];
                         // int y = now << 1;
                         // ofs << x << " : " << y << " | ";
                     }
 
                     before = after;            
-                    // image_yuv.at<Vec3b>(r,c)[channel] = image_yuv.at<Vec3b>(r,c)[channel]<<SHIFT_BITS;            
+                    // image.at<Vec3b>(r,c)[channel] = image.at<Vec3b>(r,c)[channel]<<SHIFT_BITS;            
             }
             ofs1 << endl;
             // ofs << endl;
-            // image_yuv.at<Vec3b>(r,c)[0] = 200;
+            // image.at<Vec3b>(r,c)[0] = 200;
         }
     }
 
+    gc_encoded.close();    
     
-    GolombCode gc_decoded("gc_encoded.txt",4,'r');
+}
+Mat losslessDecompress(const char* input_file){
+    GolombCode gc_decoded(input_file,4,'r');
+    ofstream ofs2("predict2.txt");
 
-    uint32_t rows,cols;
+    uint32_t rows,cols,format;
     rows = gc_decoded.decode_int();
     cols = gc_decoded.decode_int();
-    Mat image_yuv_out(rows,cols,CV_8UC3,Scalar(0,0,0));
-    // cvtColor(image_yuv, image_yuv_out, COLOR_YUV2BGR);
+    format = gc_decoded.decode_int();
+    
+    Mat image(rows,cols,CV_8UC3,Scalar(0,0,0));
+    // cvtColor(image_yuv, image, COLOR_YUV2BGR);
     for (size_t channel = 0; channel < COLOR_CHANNELS; channel++){
         for(int r = 0; r < rows; r++){
-        image_yuv_out.at<Vec3b>(r,0)[channel] = gc_decoded.decode_int();
-        ofs2 << (uint32_t)image_yuv_out.at<Vec3b>(r,0)[channel] << " ";
-        // gc_decoded.encode_char(image_yuv_out.at<Vec3b>(r,0)[channel]);
+        image.at<Vec3b>(r,0)[channel] = gc_decoded.decode_int();
+        ofs2 << (uint32_t)image.at<Vec3b>(r,0)[channel] << " ";
+        // gc_decoded.encode_char(image.at<Vec3b>(r,0)[channel]);
             for(int c= 1; c<cols; c++){
                     uint32_t now = gc_decoded.decode_int();;
-                    // image_yuv_out.at<Vec3b>(r,c)[channel] = (uint8_t)gc_decoded.decode_int(); 
+                    // image.at<Vec3b>(r,c)[channel] = (uint8_t)gc_decoded.decode_int(); 
                     ofs2 << now << " ";
-                    // image_yuv_out.at<Vec3b>(r,c)[channel] = 1;
+                    // image.at<Vec3b>(r,c)[channel] = 1;
                     if( now & 0x01){
-                        image_yuv_out.at<Vec3b>(r,c)[channel] = (uint8_t)(now >> 1) + image_yuv_out.at<Vec3b>(r,c-1)[channel];
-                        // int x = image_yuv_out.at<Vec3b>(r,c)[channel];
+                        image.at<Vec3b>(r,c)[channel] = (uint8_t)(now >> 1) + image.at<Vec3b>(r,c-1)[channel];
+                        // int x = image.at<Vec3b>(r,c)[channel];
                         // int y = ((now*-1)<<1)+1;
                         // ofs << x << " : " << y << " | ";
-                        // cout << image_yuv_out.at<Vec3b>(r,c)[channel] << " : " << ((now*-1)<<1)+1 << endl;
+                        // cout << image.at<Vec3b>(r,c)[channel] << " : " << ((now*-1)<<1)+1 << endl;
                     }else{
-                        image_yuv_out.at<Vec3b>(r,c)[channel] = image_yuv_out.at<Vec3b>(r,c-1)[channel] + (uint8_t)((now >> 1)*-1);
+                        image.at<Vec3b>(r,c)[channel] = image.at<Vec3b>(r,c-1)[channel] + (uint8_t)((now >> 1)*-1);
 
                         
                         // int x = image_yuv.at<Vec3b>(r,c)[channel];
@@ -308,6 +318,17 @@ int main(int argc, char** argv){
             // image_yuv.at<Vec3b>(r,c)[0] = 200;
         }
     }
+    gc_decoded.close();
+    return image;
+}
+int main(int argc, char** argv){
+    Mat image = imread("../Images/cao.jpg",IMG_COLOR);
+    Mat image_yuv;
+    cvtColor(image,image_yuv, COLOR_BGR2YUV);
+    losslessCompress("../GolombCodeFiles/golombencoded.txt",image_yuv);
+    Mat image_yuv_lossless = losslessDecompress("../GolombCodeFiles/golombencoded.txt");
+    Mat image_lossless;
+    cvtColor(image_yuv_lossless,image_lossless, COLOR_YUV2BGR);
     // Mat image_yuv2bgr;
     // cvtColor(image_yuv_out, image_yuv2bgr,COLOR_YUV2BGR);
     // saveImage("../Images_Out/imagedecodedout.jpg", image_yuv2bgr);
@@ -316,25 +337,25 @@ int main(int argc, char** argv){
     Mat image_decompress = decompress(image_compress,IMG_COLOR,SHIFT_BITS);
     
     //Histograms
-    vector<map<short,int>> histoOutYUV = createHistogram(image_yuv);
+    vector<map<short,int>> histoOutYUV = createHistogram(image_lossless);
     vector<map<short,int>> histoOut = createHistogram(image);
     
     //entropy
-    vector<double> entropyOutYUV = histoEntropy(histoOutYUV,image_yuv.rows*image_yuv.cols);
+    vector<double> entropyOutYUV = histoEntropy(histoOutYUV,image_lossless.rows*image_lossless.cols);
     vector<double> entropyOut = histoEntropy(histoOut,image_decompress.rows*image_decompress.cols);
     
     //Signal-Noise Ratio 
-    vector<double> snrYUV = signalToNoise(image, image_yuv_out);
+    vector<double> snrYUV = signalToNoise(image, image_lossless);
     vector<double> snrQuantization = signalToNoise(image, image_decompress);
     
     //histoimages
-    Mat histo_image_yuv = snrOnHisto(imageHisto(histoOutYUV,entropyOutYUV,6),snrYUV);
+    Mat histo_image_lossless = snrOnHisto(imageHisto(histoOutYUV,entropyOutYUV,6),snrYUV);
     Mat histo_image_decompress = snrOnHisto(imageHisto(histoOut,entropyOut,2),snrQuantization);
-    saveImage("../Images_Out/imagem_yuv.jpg",image_yuv);
 
-    saveImage("../Images_Out/imagem_yuv_out.jpg",image_yuv_out);
+    // saveImage("../Images_Out/imagem_yuv_out.jpg",image_lossless_out);
+    saveImage("../Images_Out/imagem_yuv.jpg",image_lossless);
     saveImage("../Images_Out/imagem_out.jpg",image_decompress);
-    saveImage("../Histograms/histo_yuv_out.jpg",histo_image_yuv);
+    saveImage("../Histograms/histo_yuv_out.jpg",histo_image_lossless);
     saveImage("../Histograms/histo_out.jpg",histo_image_decompress);
 
     cout << " yuv: " << snrYUV[0] << " | normal: " << snrQuantization[0] << endl;

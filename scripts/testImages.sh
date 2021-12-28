@@ -12,7 +12,7 @@ do
     for i in {0..2}
     do
         imageOut="./Images_Out/$imageIn"
-        imageCoded="${imageOut}Coded${i}"
+        imageCoded="./GolombCodeFiles/Coded${i}_${imageIn}"
         echo "./Images/"$imageIn
         echo $imageOut 
         echo $imageCoded
@@ -28,7 +28,7 @@ do
     for i in {0..2}
     do
         imageOut="./Images_Out/$imageIn"
-        imageCoded="${imageOut}Coded${i}"
+        imageCoded="./GolombCodeFiles/Coded${i}_${imageIn}"
         echo "./Images/"$imageIn
         echo $imageOut
         echo $imageCoded

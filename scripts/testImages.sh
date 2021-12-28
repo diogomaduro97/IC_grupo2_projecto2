@@ -37,6 +37,7 @@ do
 done
 
 
+echo "Images:"
 cd Images_Out
 imagesOut=$(ls *.jpg)
 cd ..
@@ -53,6 +54,16 @@ for image in $images
 do
     filesize=”$(stat -c %s $image)
     echo "${image}    ${filesize} bytes"
+done
+
+echo "Coded files:"
+cd GolombCodeFiles
+imagesCoded=$(ls *.txt)
+cd ..
+for coded in $imagesCoded
+do
+    filesize=$(stat -c %s $coded)
+    echo "${coded}    ${filesize} bytes"
 done
 
 cd scripts

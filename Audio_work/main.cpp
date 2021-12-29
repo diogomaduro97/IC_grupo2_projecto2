@@ -159,7 +159,7 @@ Mat snrOnHisto(Mat histo,vector<double> snr, int numChannels ){
         - int numChannels               -> number of channels 
 */
 void histoToFile(vector<map<double,int>> histo,int numChannels){
-    ofstream ofs("../histo.txt");
+    ofstream ofs("../Histograms/histo.txt");
     for(int i = 0; i< numChannels; i++){
         ofs << "canal numero: " << i << endl;
         for(it = histo[i].begin(); it!=histo[i].end() ; it++ ){
@@ -256,11 +256,19 @@ vector<double> signalToNoise(AudioFile<double> audio1, AudioFile<double> audio2)
     return psnr;
 }
 int main(int argc, char** argv) {
-    const char* fileIn = argc > 1? argv[1]:"../../Sounds/sample01.wav";
-    const char* losslessFileOut = argc > 2? argv[2]:"../lossless_out.iclac";
-    const char* lossyFileOut = argc > 2? argv[3]:"../lossy_out.wav";
-    const char* losslessFileOutDecompressed = "../lossless_out_decompressed.wav";
-    const char* lossyFileOutDecompressed = "../lossy_out_decompressed.wav";
+
+
+    // const char* fileIn = argc > 1? argv[1]:"../Sounds/sample01.wav";
+    // const char* losslessFileOut = argc > 2? argv[2]:"../Sounds_Out/lossless_out.iclac";
+    // const char* lossyFileOut = argc > 2? argv[3]:"../Sounds_Out/lossy_out.wav";
+    // const char* losslessFileOutDecompressed = argc > 2? argv[4]:"../Sounds_Out/lossless_out_decompressed.wav";
+    // const char* lossyFileOutDecompressed = argc > 2? argv[5]:"../Sounds_Out/lossy_out_decompressed.wav";
+
+    const char* fileIn = argc > 1? argv[1]:"../Sounds/sample01.wav";
+    const char* losslessFileOut = argc > 2? argv[2]:"../Sounds_Out/lossless_out.iclac";
+    const char* lossyFileOut = argc > 2? argv[3]:"../Sounds_Out/lossy_out.wav";
+    const char* losslessFileOutDecompressed = argc > 2? argv[4]:"../Sounds_Out/lossless_out_decompressed.wav";
+    const char* lossyFileOutDecompressed = argc > 2? argv[5]:"../Sounds_Out/lossy_out_decompressed.wav";
 
     AudioFile<double> audioFile;
     audioFile.load(fileIn);
@@ -303,11 +311,11 @@ int main(int argc, char** argv) {
     Mat histo_image = imageHisto(histo,entropy);
     namedWindow("Histogram", WINDOW_AUTOSIZE );
     imshow("Histogram", histo_image);
-    imwrite("../histo.jpg", histo_image);
+    imwrite("../Histograms/histo.jpg", histo_image);
     Mat histo_image_decompressed = snrOnHisto(imageHisto(histo_decompressed,entropy_decompressed),psnr,numChannels);
     namedWindow("Histogram Decompressed", WINDOW_AUTOSIZE);
     imshow("Histogram Decompressed", histo_image_decompressed);
-    imwrite("../histo_decompressed.jpg", histo_image_decompressed);
+    imwrite("../Histograms/histo_decompressed.jpg", histo_image_decompressed);
     waitKey(WAIT_KEY);
     return 0;
 }

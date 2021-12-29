@@ -7,5 +7,6 @@ Project #02.pdf
 test
 Bitstream
 build/
-Images_Out/*
-Histograms/*
+Images_Out/
+Histograms/
+GolombCodeFiles/

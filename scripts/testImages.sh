@@ -1,6 +1,8 @@
 #!/bin/bash
-
+rm -rf ../GolombCodeFiles ../Images_Out ../Histograms 
+mkdir  ../GolombCodeFiles ../Images_Out ../Histograms 
 cd ../build
+
 
 make
 start_time=$SECONDS
@@ -77,7 +79,7 @@ cd ..
 echo "Original files:"
 
 imagesCoded=$(ls ./Images/*.jpg)
-echo "Original files:"
+
 
 for coded in $imagesCoded
 do
@@ -86,7 +88,6 @@ do
 done
 
 imagesCoded=$(ls ./Images/*.png)
-echo "Original files:"
 
 for coded in $imagesCoded
 do

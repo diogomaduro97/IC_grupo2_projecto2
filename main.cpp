@@ -370,9 +370,9 @@ Mat losslessDecompress(const char* input_file){
                             image.at<Vec3b>(r,c)[channel] = cor;
                             image.at<Vec3b>(r,c-1)[channel] = cor;
                         }
-                        // if((c+2)==cols){
-                        //     image.at<Vec3b>(r,c+1)[channel] = image.at<Vec3b>(r,c)[channel];
-                        // }     
+                        if((c+2)==cols){
+                            image.at<Vec3b>(r,c+1)[channel] = image.at<Vec3b>(r,c)[channel];
+                        }     
                     }
                 }
             }
@@ -414,10 +414,10 @@ Mat losslessDecompress(const char* input_file){
                             image.at<Vec3b>(r+1,c)[channel] = image.at<Vec3b>(r,c)[channel];
                             image.at<Vec3b>(r+1,c-1)[channel] = image.at<Vec3b>(r,c)[channel];
                         }
-                        // if((c+2)==cols){
-                        //     image.at<Vec3b>(r-1,c+1)[channel] = image.at<Vec3b>(r,c)[channel];
-                        //     image.at<Vec3b>(r,c+1)[channel] = image.at<Vec3b>(r,c)[channel];
-                        // }
+                        if((c+2)==cols){
+                            image.at<Vec3b>(r-1,c+1)[channel] = image.at<Vec3b>(r,c)[channel];
+                            image.at<Vec3b>(r,c+1)[channel] = image.at<Vec3b>(r,c)[channel];
+                        }
                     }
                 }
             }
@@ -476,7 +476,7 @@ Mat lossyDecompress(const char* output_file){
     return decompress(image,SHIFT_BITS);
 }
 int main(int argc, char** argv){
-    char * x = argv[1];
+    string x = argv[1];
     Mat image = imread(x,IMG_COLOR);
     Mat image_yuv;
     Mat image_conv;
@@ -525,18 +525,18 @@ int main(int argc, char** argv){
     Mat histo_image = imageHisto(histoOut,entropyOut,2);
     Mat histo_image_lossless = snrOnHisto(imageHisto(histoOutYUV,entropyOutYUV,2),snrYUV);
     // saveImage("../Images_Out/imagem_yuv_out.jpg",image_lossless_out);
-    saveImage(argv[2],image_lossless);
+    string imaout = argv[2];
+    saveImage(imaout,image_lossless);
     saveImage("../Histograms/histo.jpg",histo_image);
     
     saveImage("../Histograms/histo_yuv.jpg",histo_image_lossless);
-
-    cout << x << " -> ";
+    cout << left << setw(16) <<  imaout.erase(0,13) << " -> ";
     string chanels[3];
-    chanels[0] = " azul";
-    chanels[1] = " vermelho";
-    chanels[2] = " verde";
+    chanels[0] = " B";
+    chanels[1] = " G";
+    chanels[2] = " R";
     for(int i = 0; i<3;i++){
-        cout << chanels[i] <<" : " << snrYUV[i];  
+        cout << left << setw(3) <<chanels[i] <<": "<< left << setw(7)<< snrYUV[i];  
     }
     cout << endl;
     waitKey(1);

@@ -7,7 +7,7 @@ Project #02.pdf
 test
 Bitstream
 build/
-Images_Out/*
-Histograms/*
-Audio_work/AudioFile/*
-Audio_work/build/*
+Images_Out/
+Histograms/
+GolombCodeFiles/
+Audio_work/build/

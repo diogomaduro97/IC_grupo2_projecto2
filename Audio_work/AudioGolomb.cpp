@@ -1,5 +1,5 @@
-#include "AudioFile.h"
-#include "Bitstream.h"
+#include "AudioFile/AudioFile.h"
+#include "../headers/Bitstream.h"
 #include <math.h>
 
 using namespace std;
@@ -97,7 +97,7 @@ class AudioGolomb
 
         }
 
-        void encodeTo(const char* fout)
+        void losslessEncodeTo(const char* fout)
         {
             bifs.open(fout, 'w');
 
@@ -138,7 +138,7 @@ class AudioGolomb
             }
         }
 
-        void decodeTo(const char* fout)
+        void losslessDecodeTo(const char* fout)
         {
             bofs.open(encodedFilename, 'r');
 
@@ -181,16 +181,16 @@ class AudioGolomb
         }
 };
 
-int main(){
-    // File names
-    const char* fin = "./sample02.wav";
-    const char* fout = "./outAudioFile";
+// int main() {
+//     // File names
+//     const char* fin = "./sample02.wav";
+//     const char* fout = "./outAudioFile";
     
-    // Encode
-    AudioGolomb ge(fin, 128, 'e');
-    ge.encodeTo("outAudioFile");
+//     // Encode
+//     AudioGolomb ge(fin, 128, 'e');
+//     ge.losslessEncodeTo("outAudioFile");
 
-    // Decode
-    AudioGolomb gd(fout, 128, 'd');
-    gd.decodeTo("decoded_sample02.wav");
-}
+//     // Decode
+//     AudioGolomb gd(fout, 128, 'd');
+//     gd.losslessDecodeTo("decoded_sample02.wav");
+// }

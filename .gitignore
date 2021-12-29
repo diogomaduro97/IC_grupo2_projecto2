@@ -9,3 +9,5 @@ Bitstream
 build/
 Images_Out/*
 Histograms/*
+Audio_work/AudioFile/*
+Audio_work/build/*

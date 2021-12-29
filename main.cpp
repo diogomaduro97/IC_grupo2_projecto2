@@ -370,9 +370,9 @@ Mat losslessDecompress(const char* input_file){
                             image.at<Vec3b>(r,c)[channel] = cor;
                             image.at<Vec3b>(r,c-1)[channel] = cor;
                         }
-                        if((c+2)==cols){
-                            image.at<Vec3b>(r,c+1)[channel] = image.at<Vec3b>(r,c)[channel];
-                        }     
+                        // if((c+2)==cols){
+                        //     image.at<Vec3b>(r,c+1)[channel] = image.at<Vec3b>(r,c)[channel];
+                        // }     
                     }
                 }
             }
@@ -414,10 +414,10 @@ Mat losslessDecompress(const char* input_file){
                             image.at<Vec3b>(r+1,c)[channel] = image.at<Vec3b>(r,c)[channel];
                             image.at<Vec3b>(r+1,c-1)[channel] = image.at<Vec3b>(r,c)[channel];
                         }
-                        if((c+2)==cols){
-                            image.at<Vec3b>(r-1,c+1)[channel] = image.at<Vec3b>(r,c)[channel];
-                            image.at<Vec3b>(r,c+1)[channel] = image.at<Vec3b>(r,c)[channel];
-                        }
+                        // if((c+2)==cols){
+                        //     image.at<Vec3b>(r-1,c+1)[channel] = image.at<Vec3b>(r,c)[channel];
+                        //     image.at<Vec3b>(r,c+1)[channel] = image.at<Vec3b>(r,c)[channel];
+                        // }
                     }
                 }
             }
@@ -447,6 +447,7 @@ Mat cvtTo422(Mat image){
 }
 Mat cvtTo420(Mat image){
     Mat imageOut(image.rows, image.cols,CV_8UC3,Scalar(0,0,0));
+
     for(int r = 0; r < image.rows; r++){
         for(int c= 0; c<image.cols; c++){
             imageOut.at<Vec3b>(r,c)[0] = image.at<Vec3b>(r,c)[0];
@@ -475,37 +476,33 @@ Mat lossyDecompress(const char* output_file){
     return decompress(image,SHIFT_BITS);
 }
 int main(int argc, char** argv){
-    Mat image = imread("../Images/cao.jpg",IMG_COLOR);
+    char * x = argv[1];
+    Mat image = imread(x,IMG_COLOR);
     Mat image_yuv;
-    cvtColor(image,image_yuv, COLOR_BGR2YUV);
-    Mat image_yuv_422 = cvtTo422(image_yuv);
-    Mat image_yuv_420 = cvtTo420(image_yuv);
-    
-    losslessCompress("../GolombCodeFiles/golombencoded.txt",image_yuv);
-    losslessCompress("../GolombCodeFiles/golombencoded422.txt",image_yuv_422,FORMAT_422);
-    losslessCompress("../GolombCodeFiles/golombencoded420.txt",image_yuv_420,FORMAT_420);
+    Mat image_conv;
+    int format = atoi(argv[4]);
+    switch(format) {
+        case FORMAT_444 :
+            cvtColor(image,image_yuv, COLOR_BGR2YUV);
+        break;
+        case FORMAT_422:
+            cvtColor(image,image_conv, COLOR_BGR2YUV);
+            image_yuv = cvtTo422(image_conv);
+        break;
+        case FORMAT_420:
+            cvtColor(image,image_conv, COLOR_BGR2YUV);
+            image_yuv = cvtTo420(image_conv);
+        break;
 
-    lossyCompress("../GolombCodeFiles/golombencodedlossy.txt",image_yuv);
-    lossyCompress("../GolombCodeFiles/golombencoded422lossy.txt",image_yuv_422,FORMAT_422);
-    lossyCompress("../GolombCodeFiles/golombencoded420lossy.txt",image_yuv_420,FORMAT_420);
+    }
+    char* golombFile = argv[3];
+    losslessCompress(golombFile,image_yuv,format);
 
-    Mat image_yuv_lossless = losslessDecompress("../GolombCodeFiles/golombencoded.txt");
-    Mat image_yuv_lossless_422 = losslessDecompress("../GolombCodeFiles/golombencoded422.txt");
-    Mat image_yuv_lossless_420 = losslessDecompress("../GolombCodeFiles/golombencoded420.txt");
+    Mat image_yuv_lossless = losslessDecompress(golombFile);
 
-    Mat image_yuv_lossy = lossyDecompress("../GolombCodeFiles/golombencodedlossy.txt");
-    Mat image_yuv_lossy_422 = lossyDecompress("../GolombCodeFiles/golombencoded422lossy.txt");
-    Mat image_yuv_lossy_420 = lossyDecompress("../GolombCodeFiles/golombencoded420lossy.txt");
-
-    Mat image_lossless,image_lossless_422,image_lossless_420;
+    Mat image_lossless;
     cvtColor(image_yuv_lossless,image_lossless, COLOR_YUV2BGR);
-    cvtColor(image_yuv_lossless_422,image_lossless_422, COLOR_YUV2BGR);
-    cvtColor(image_yuv_lossless_420,image_lossless_420, COLOR_YUV2BGR);
 
-    Mat image_lossy,image_lossy_422,image_lossy_420;
-    cvtColor(image_yuv_lossy,image_lossy, COLOR_YUV2BGR);
-    cvtColor(image_yuv_lossy_422,image_lossy_422, COLOR_YUV2BGR);
-    cvtColor(image_yuv_lossy_420,image_lossy_420, COLOR_YUV2BGR);
     // Mat image_yuv2bgr;
     // cvtColor(image_yuv_out, image_yuv2bgr,COLOR_YUV2BGR);
     // saveImage("../Images_Out/imagedecodedout.jpg", image_yuv2bgr);
@@ -514,70 +511,140 @@ int main(int argc, char** argv){
     vector<map<short,int>> histoOut = createHistogram(image);
 
     vector<map<short,int>> histoOutYUV = createHistogram(image_lossless);
-    vector<map<short,int>> histoOutYUV422 = createHistogram(image_lossless_422);
-    vector<map<short,int>> histoOutYUV420 = createHistogram(image_lossless_420);
 
-    vector<map<short,int>> histoOutYUVlossy = createHistogram(image_lossy);
-    vector<map<short,int>> histoOutYUV422lossy = createHistogram(image_lossy_422);
-    vector<map<short,int>> histoOutYUV420lossy = createHistogram(image_lossy_420);
-
-    
     //entropy
     vector<double> entropyOut = histoEntropy(histoOut,image.rows*image.cols);
     
-    vector<double> entropyOutYUV = histoEntropy(histoOutYUV,image_lossless.rows*image_lossless.cols);
-    vector<double> entropyOutYUV422 = histoEntropy(histoOutYUV422,image_lossless_422.rows*image_lossless_422.cols);
-    vector<double> entropyOutYUV420 = histoEntropy(histoOutYUV420,image_lossless_420.rows*image_lossless_420.cols);
-
-    vector<double> entropyOutYUVlossy = histoEntropy(histoOutYUVlossy,image_lossy.rows*image_lossy.cols);
-    vector<double> entropyOutYUV422lossy = histoEntropy(histoOutYUV422lossy,image_lossy_422.rows*image_lossy_422.cols);
-    vector<double> entropyOutYUV420lossy = histoEntropy(histoOutYUV420lossy,image_lossy_420.rows*image_lossy_420.cols);
+    vector<double> entropyOutYUV = histoEntropy(histoOutYUV,image_lossless.rows*image_lossless.cols);;
 
     
     //Signal-Noise Ratio 
     vector<double> snrYUV = signalToNoise(image, image_lossless);
-    vector<double> snrYUV422 = signalToNoise(image, image_lossless_422);
-    vector<double> snrYUV420 = signalToNoise(image, image_lossless_420);
-
-    vector<double> snrYUVlossy = signalToNoise(image, image_lossy);
-    vector<double> snrYUV422lossy = signalToNoise(image, image_lossy_422);
-    vector<double> snrYUV420lossy = signalToNoise(image, image_lossy_420);
-
     
     //histoimages
     Mat histo_image = imageHisto(histoOut,entropyOut,2);
     Mat histo_image_lossless = snrOnHisto(imageHisto(histoOutYUV,entropyOutYUV,2),snrYUV);
-    Mat histo_image_lossless422 = snrOnHisto(imageHisto(histoOutYUV422,entropyOutYUV422,2),snrYUV422);
-    Mat histo_image_lossless420 = snrOnHisto(imageHisto(histoOutYUV420,entropyOutYUV420,2),snrYUV420);
-
-    Mat histo_image_lossy = snrOnHisto(imageHisto(histoOutYUVlossy,entropyOutYUVlossy,2),snrYUVlossy);
-    Mat histo_image_lossy422 = snrOnHisto(imageHisto(histoOutYUV422lossy,entropyOutYUV422lossy,2),snrYUV422lossy);
-    Mat histo_image_lossy420 = snrOnHisto(imageHisto(histoOutYUV420lossy,entropyOutYUV420lossy,2),snrYUV420lossy);
     // saveImage("../Images_Out/imagem_yuv_out.jpg",image_lossless_out);
-    saveImage("../Images_Out/imagem_yuv.jpg",image_lossless);
-    saveImage("../Images_Out/imagem_yuv422.jpg",image_lossless_422);
-    saveImage("../Images_Out/imagem_yuv420.jpg",image_lossless_420);
-
-    saveImage("../Images_Out/imagem_yuvlossy.jpg",image_lossy);
-    saveImage("../Images_Out/imagem_yuv422lossy.jpg",image_lossy_422);
-    saveImage("../Images_Out/imagem_yuv420lossy.jpg",image_lossy_420);
-    
+    saveImage(argv[2],image_lossless);
     saveImage("../Histograms/histo.jpg",histo_image);
     
     saveImage("../Histograms/histo_yuv.jpg",histo_image_lossless);
-    saveImage("../Histograms/histo_yuv422.jpg",histo_image_lossless422);
-    saveImage("../Histograms/histo_yuv420.jpg",histo_image_lossless420);
 
-    saveImage("../Histograms/histo_yuvlossy.jpg",histo_image_lossy);
-    saveImage("../Histograms/histo_yuv422lossy.jpg",histo_image_lossy422);
-    saveImage("../Histograms/histo_yuv420lossy.jpg",histo_image_lossy420);
-
-
+    cout << x << " -> ";
+    string chanels[3];
+    chanels[0] = " azul";
+    chanels[1] = " vermelho";
+    chanels[2] = " verde";
     for(int i = 0; i<3;i++){
-        cout << " yuv: " << snrYUV[i] << " | yuv_422: " << snrYUV422[i] << " | yuv_420: " << snrYUV420[i] << " yuv_lossy: " << snrYUVlossy[i] << " | yuv_422_lossy: " << snrYUV422lossy[i] << " | yuv_420_lossy: " << snrYUV420lossy[i] << endl;
+        cout << chanels[i] <<" : " << snrYUV[i];  
     }
+    cout << endl;
     waitKey(1);
 }
+// int main(int argc, char** argv){
+//     Mat image = imread(argv[2],IMG_COLOR);
+//     Mat image_yuv;
+//     cvtColor(image,image_yuv, COLOR_BGR2YUV);
+//     Mat image_yuv_422 = cvtTo422(image_yuv);
+//     Mat image_yuv_420 = cvtTo420(image_yuv);
+    
+//     losslessCompress("../GolombCodeFiles/golombencoded.txt",image_yuv);
+//     losslessCompress("../GolombCodeFiles/golombencoded422.txt",image_yuv_422,FORMAT_422);
+//     losslessCompress("../GolombCodeFiles/golombencoded420.txt",image_yuv_420,FORMAT_420);
+
+//     lossyCompress("../GolombCodeFiles/golombencodedlossy.txt",image_yuv);
+//     lossyCompress("../GolombCodeFiles/golombencoded422lossy.txt",image_yuv_422,FORMAT_422);
+//     lossyCompress("../GolombCodeFiles/golombencoded420lossy.txt",image_yuv_420,FORMAT_420);
+
+//     Mat image_yuv_lossless = losslessDecompress("../GolombCodeFiles/golombencoded.txt");
+//     Mat image_yuv_lossless_422 = losslessDecompress("../GolombCodeFiles/golombencoded422.txt");
+//     Mat image_yuv_lossless_420 = losslessDecompress("../GolombCodeFiles/golombencoded420.txt");
+
+//     Mat image_yuv_lossy = lossyDecompress("../GolombCodeFiles/golombencodedlossy.txt");
+//     Mat image_yuv_lossy_422 = lossyDecompress("../GolombCodeFiles/golombencoded422lossy.txt");
+//     Mat image_yuv_lossy_420 = lossyDecompress("../GolombCodeFiles/golombencoded420lossy.txt");
+
+//     Mat image_lossless,image_lossless_422,image_lossless_420;
+//     cvtColor(image_yuv_lossless,image_lossless, COLOR_YUV2BGR);
+//     cvtColor(image_yuv_lossless_422,image_lossless_422, COLOR_YUV2BGR);
+//     cvtColor(image_yuv_lossless_420,image_lossless_420, COLOR_YUV2BGR);
+
+//     Mat image_lossy,image_lossy_422,image_lossy_420;
+//     cvtColor(image_yuv_lossy,image_lossy, COLOR_YUV2BGR);
+//     cvtColor(image_yuv_lossy_422,image_lossy_422, COLOR_YUV2BGR);
+//     cvtColor(image_yuv_lossy_420,image_lossy_420, COLOR_YUV2BGR);
+//     // Mat image_yuv2bgr;
+//     // cvtColor(image_yuv_out, image_yuv2bgr,COLOR_YUV2BGR);
+//     // saveImage("../Images_Out/imagedecodedout.jpg", image_yuv2bgr);
+    
+//     //Histograms
+//     vector<map<short,int>> histoOut = createHistogram(image);
+
+//     vector<map<short,int>> histoOutYUV = createHistogram(image_lossless);
+//     vector<map<short,int>> histoOutYUV422 = createHistogram(image_lossless_422);
+//     vector<map<short,int>> histoOutYUV420 = createHistogram(image_lossless_420);
+
+//     vector<map<short,int>> histoOutYUVlossy = createHistogram(image_lossy);
+//     vector<map<short,int>> histoOutYUV422lossy = createHistogram(image_lossy_422);
+//     vector<map<short,int>> histoOutYUV420lossy = createHistogram(image_lossy_420);
+
+    
+//     //entropy
+//     vector<double> entropyOut = histoEntropy(histoOut,image.rows*image.cols);
+    
+//     vector<double> entropyOutYUV = histoEntropy(histoOutYUV,image_lossless.rows*image_lossless.cols);
+//     vector<double> entropyOutYUV422 = histoEntropy(histoOutYUV422,image_lossless_422.rows*image_lossless_422.cols);
+//     vector<double> entropyOutYUV420 = histoEntropy(histoOutYUV420,image_lossless_420.rows*image_lossless_420.cols);
+
+//     vector<double> entropyOutYUVlossy = histoEntropy(histoOutYUVlossy,image_lossy.rows*image_lossy.cols);
+//     vector<double> entropyOutYUV422lossy = histoEntropy(histoOutYUV422lossy,image_lossy_422.rows*image_lossy_422.cols);
+//     vector<double> entropyOutYUV420lossy = histoEntropy(histoOutYUV420lossy,image_lossy_420.rows*image_lossy_420.cols);
+
+    
+//     //Signal-Noise Ratio 
+//     vector<double> snrYUV = signalToNoise(image, image_lossless);
+//     vector<double> snrYUV422 = signalToNoise(image, image_lossless_422);
+//     vector<double> snrYUV420 = signalToNoise(image, image_lossless_420);
+
+//     vector<double> snrYUVlossy = signalToNoise(image, image_lossy);
+//     vector<double> snrYUV422lossy = signalToNoise(image, image_lossy_422);
+//     vector<double> snrYUV420lossy = signalToNoise(image, image_lossy_420);
+
+    
+//     //histoimages
+//     Mat histo_image = imageHisto(histoOut,entropyOut,2);
+//     Mat histo_image_lossless = snrOnHisto(imageHisto(histoOutYUV,entropyOutYUV,2),snrYUV);
+//     Mat histo_image_lossless422 = snrOnHisto(imageHisto(histoOutYUV422,entropyOutYUV422,2),snrYUV422);
+//     Mat histo_image_lossless420 = snrOnHisto(imageHisto(histoOutYUV420,entropyOutYUV420,2),snrYUV420);
+
+//     Mat histo_image_lossy = snrOnHisto(imageHisto(histoOutYUVlossy,entropyOutYUVlossy,2),snrYUVlossy);
+//     Mat histo_image_lossy422 = snrOnHisto(imageHisto(histoOutYUV422lossy,entropyOutYUV422lossy,2),snrYUV422lossy);
+//     Mat histo_image_lossy420 = snrOnHisto(imageHisto(histoOutYUV420lossy,entropyOutYUV420lossy,2),snrYUV420lossy);
+//     // saveImage("../Images_Out/imagem_yuv_out.jpg",image_lossless_out);
+//     saveImage("../Images_Out/imagem_yuv.jpg ",image_lossless);
+//     saveImage("../Images_Out/imagem_yuv422.jpg",image_lossless_422);
+//     saveImage("../Images_Out/imagem_yuv420.jpg",image_lossless_420);
+
+//     saveImage("../Images_Out/imagem_yuvlossy.jpg",image_lossy);
+//     saveImage("../Images_Out/imagem_yuv422lossy.jpg",image_lossy_422);
+//     saveImage("../Images_Out/imagem_yuv420lossy.jpg",image_lossy_420);
+    
+//     saveImage("../Histograms/histo.jpg",histo_image);
+    
+//     saveImage("../Histograms/histo_yuv.jpg",histo_image_lossless);
+//     saveImage("../Histograms/histo_yuv422.jpg",histo_image_lossless422);
+//     saveImage("../Histograms/histo_yuv420.jpg",histo_image_lossless420);
+
+//     saveImage("../Histograms/histo_yuvlossy.jpg",histo_image_lossy);
+//     saveImage("../Histograms/histo_yuv422lossy.jpg",histo_image_lossy422);
+//     saveImage("../Histograms/histo_yuv420lossy.jpg",histo_image_lossy420);
+
+
+//     for(int i = 0; i<3;i++){
+//         cout << " yuv: " << snrYUV[i] << " | yuv_422: " << snrYUV422[i] << " | yuv_420: " << snrYUV420[i] << " yuv_lossy: " << snrYUVlossy[i] << " | yuv_422_lossy: " << snrYUV422lossy[i] << " | yuv_420_lossy: " << snrYUV420lossy[i] << endl;
+//     }
+//     waitKey(1);
+// }
 // int main(int argc, char** argv ) // main para usar imagens (meter WAIT_KEY a 0)
 // {
 //     Mat image = imread("../Images/cao.jpg",IMG_COLOR);

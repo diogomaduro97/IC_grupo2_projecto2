@@ -479,7 +479,25 @@ Mat lossyDecompress(const char* output_file){
     Mat image = losslessDecompress(output_file);
     return decompress(image,SHIFT_BITS);
 }
+
+string fileName(string filename) {
+    const size_t last_slash_idx = filename.find_last_of("\\/");
+    if (std::string::npos != last_slash_idx)
+    {
+        filename.erase(0, last_slash_idx + 1);
+    }
+
+    // Remove extension if present.
+    const size_t period_idx = filename.rfind('.');
+        if (std::string::npos != period_idx)
+        {
+            filename.erase(period_idx);
+        }
+        return filename;
+}
+
 int main(int argc, char** argv){
+    string histoFile = fileName(argv[1]);
     string x = argv[1];
     Mat image = imread(x,IMG_COLOR);
     Mat image_yuv;
@@ -532,10 +550,17 @@ int main(int argc, char** argv){
     // saveImage("../Images_Out/imagem_yuv_out.jpg",image_lossless_out);
     string imaout = argv[2];
     saveImage(imaout,image_lossless);
-    saveImage("../Histograms/histo.jpg",histo_image);
+    // saveImage("../Histograms/histo.jpg",histo_image);
+    saveImage("../Histograms/" + histoFile + "_histo.jpg",histo_image);
     
+<<<<<<< HEAD
     saveImage("../Histograms/histo_yuv.jpg",histo_image_lossless);
     cout << left << setw(20) <<  imaout.erase(0,13) << " -> ";
+=======
+    // saveImage("../Histograms/histo_yuv.jpg",histo_image_lossless);
+    saveImage("../Histograms/" + histoFile + "_histo_yuv.jpg",histo_image_lossless);
+    cout << left << setw(16) <<  imaout.erase(0,13) << " -> ";
+>>>>>>> 11975a9e81d4c7ca246489477c3dbdb89c75f3af
     string chanels[3];
     chanels[0] = " B";
     chanels[1] = " G";

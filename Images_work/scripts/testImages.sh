@@ -1,10 +1,16 @@
 #!/bin/bash
+rm -rf ../build
+mkdir ../build
+cd ../build
+cmake ..
+make
+
 rm -rf ../GolombCodeFiles ../Images_Out ../Histograms 
 mkdir  ../GolombCodeFiles ../Images_Out ../Histograms 
-cd ../build
+# cd build
 
 
-make
+# make
 start_time=$SECONDS
 
 cd ../

@@ -13,14 +13,17 @@ images=$(ls *.ppm)
 cd ../build
 for imageIn in $images
 do
-    for i in {0..2}
+    for j in {0,2}
     do
-        imageOut="../Images_Out/${imageIn%".ppm"}_${i}.ppm"
-        imageCoded="../GolombCodeFiles/${imageIn%".ppm"}_${i}.txt"
-        # echo "../Images/"$imageIn
-        # echo $imageOut 
-        # echo $imageCoded
-        ./opencvTest "../Images/"$imageIn $imageOut $imageCoded $i
+        for i in {0..2}
+        do
+            imageOut="../Images_Out/${imageIn%".ppm"}_${i}_${j}.ppm"
+            imageCoded="../GolombCodeFiles/${imageIn%".ppm"}_${i}_${j}.txt"
+            # echo "../Images/"$imageIn
+            # echo $imageOut 
+            # echo $imageCoded
+            ./opencvTest "../Images/"$imageIn $imageOut $imageCoded $i $j
+        done
     done
 done
 cd ../
@@ -29,14 +32,17 @@ images=$(ls *.jpg)
 cd ../build
 for imageIn in $images
 do
-    for i in {0..2}
+    for j in {0,2}
     do
-        imageOut="../Images_Out/${imageIn%".jpg"}_${i}.jpg"
-        imageCoded="../GolombCodeFiles/${imageIn%".jpg"}_${i}.txt"
+        for i in {0..2}
+        do
+        imageOut="../Images_Out/${imageIn%".jpg"}_${i}_${j}.jpg"
+        imageCoded="../GolombCodeFiles/${imageIn%".jpg"}_${i}_${j}.txt"
         # echo "../Images/"$imageIn
         # echo $imageOut 
         # echo $imageCoded
-        ./opencvTest "../Images/"$imageIn $imageOut $imageCoded $i
+        ./opencvTest "../Images/"$imageIn $imageOut $imageCoded $i $j
+        done
     done
 done
 cd ..
@@ -45,14 +51,17 @@ images=$(ls *.png)
 cd ../build
 for imageIn in $images
 do
-    for i in {0..2}
+    for j in {0,2}
     do
-        imageOut="../Images_Out/${imageIn%".png"}_${i}.png"
-        imageCoded="../GolombCodeFiles/${imageIn%".png"}_${i}.txt"
+        for i in {0..2}
+        do
+        imageOut="../Images_Out/${imageIn%".png"}_${i}_${j}.png"
+        imageCoded="../GolombCodeFiles/${imageIn%".png"}_${i}_${j}.txt"
         # echo "../Images/"$imageIn
         # echo $imageOut 
         # echo $imageCoded
-        ./opencvTest "../Images/"$imageIn $imageOut $imageCoded $i
+        ./opencvTest "../Images/"$imageIn $imageOut $imageCoded $i $j
+        done
     done
 done
 

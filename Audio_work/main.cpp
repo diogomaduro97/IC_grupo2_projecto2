@@ -159,9 +159,14 @@ Mat snrOnHisto(Mat histo,vector<double> snr, int numChannels ){
         - int numChannels               -> number of channels 
 */
 
-void histoToFile(vector<map<double,int>> histo,int numChannels, string name){
+void histoToFile(vector<map<double,int>> histo,int numChannels, string name, int flag=0){
     // ofstream ofs("../Histograms/histo.txt");
-    ofstream ofs("../Histograms/" + name + "_histo.txt");
+    string file;
+    if (flag)
+        file = "../Histograms/" + name + "_histoDecompressed.txt";
+    else 
+        file = "../Histograms/" + name + "_histo.txt";
+    ofstream ofs(file);
     for(int i = 0; i< numChannels; i++){
         ofs << "canal numero: " << i << endl;
         for(it = histo[i].begin(); it!=histo[i].end() ; it++ ){
@@ -309,13 +314,16 @@ int main(int argc, char** argv) {
     bool ok;
     tie(audioFile_out,histo,ok) = copyAudioFile(audioFile);
     vector<double> entropy = histoEntropy(histo,numChannels,audioFile.getNumSamplesPerChannel());
-    histoToFile(histo,numChannels,histoFile);
+    histoToFile(histo,numChannels,histoFile, 0);
+    // or, just use this quick shortcut to print a summary to the console
+    //if(ok) audioFile_out.save(fileOut);
     
     lossyCompress(audioFile, lossyFileOut);
     AudioFile<double> audio_out_decompressed = lossyDecompress(lossyFileOut);
     audio_out_decompressed.save(lossyFileOutDecompressed);
     vector<map<double,int>> histo_decompressed = generate_histogram(audio_out_decompressed);
     vector<double> entropy_decompressed = histoEntropy(histo_decompressed,numChannels,audioFile.getNumSamplesPerChannel());
+    histoToFile(histo_decompressed, numChannels, histoFile, 1);
     
     vector<double> psnr = signalToNoise(audioFile,audio_out_decompressed);
     for (int i = 0; i < numChannels; i++)

@@ -225,7 +225,7 @@ void saveImage(string path,Mat image, uint8_t show = 1 ){
     }
     imwrite(path, image);
 }
-void losslessCompress(const char* output_file, Mat image, uint8_t format = FORMAT_444){
+void losslessCompress(const char* output_file, Mat image, uint8_t format = FORMAT_444,uint8_t bits = SHIFT_BITS){
     GolombCode gc_encoded(output_file,4,'w');
     //image RGB2YUV 
     // cvtColor(image,image_yuv,COLOR_BGR2YUV);
@@ -234,15 +234,17 @@ void losslessCompress(const char* output_file, Mat image, uint8_t format = FORMA
     gc_encoded.encode_int(image.rows, "\n");
     gc_encoded.encode_int(image.cols, "\n");
     gc_encoded.encode_int(format, "\n");
+    gc_encoded.encode_int(bits, "\n");
+    Mat image_comp = compress(image,IMG_COLOR,bits);
     switch (format) {
         case FORMAT_444:
             for (size_t channel = 0; channel < COLOR_CHANNELS; channel++){
-                for(int r = 0; r < image.rows; r++){
-                    before = image.at<Vec3b>(r,0)[channel];
-                    gc_encoded.encode_int(image.at<Vec3b>(r,0)[channel]);
-                    for(int c= 1; c<image.cols; c++){
-                        after = image.at<Vec3b>(r,c)[channel]; 
-                        now = before - image.at<Vec3b>(r,c)[channel];
+                for(int r = 0; r < image_comp.rows; r++){
+                    before = image_comp.at<Vec3b>(r,0)[channel];
+                    gc_encoded.encode_int(image_comp.at<Vec3b>(r,0)[channel]);
+                    for(int c= 1; c<image_comp.cols; c++){
+                        after = image_comp.at<Vec3b>(r,c)[channel]; 
+                        now = before - image_comp.at<Vec3b>(r,c)[channel];
                         if(now < 0){
                             gc_encoded.encode_int(((now*-1)<<1)+1);
                         }else{
@@ -254,12 +256,12 @@ void losslessCompress(const char* output_file, Mat image, uint8_t format = FORMA
             }
         break;
         case FORMAT_422:
-            for(int r = 0; r < image.rows; r++){
-                before = image.at<Vec3b>(r,0)[0];
-                gc_encoded.encode_int(image.at<Vec3b>(r,0)[0]);
-                    for(int c= 1; c<image.cols; c++){
-                            after = image.at<Vec3b>(r,c)[0];                             
-                            now = before - image.at<Vec3b>(r,c)[0];
+            for(int r = 0; r < image_comp.rows; r++){
+                before = image_comp.at<Vec3b>(r,0)[0];
+                gc_encoded.encode_int(image_comp.at<Vec3b>(r,0)[0]);
+                    for(int c= 1; c<image_comp.cols; c++){
+                            after = image_comp.at<Vec3b>(r,c)[0];                             
+                            now = before - image_comp.at<Vec3b>(r,c)[0];
                             if(now < 0){
                                 gc_encoded.encode_int(((now*-1)<<1)+1);
                             }else{
@@ -269,12 +271,12 @@ void losslessCompress(const char* output_file, Mat image, uint8_t format = FORMA
                     }
                 }
             for (size_t channel = 1; channel < COLOR_CHANNELS; channel++){
-                for(int r = 0; r < image.rows; r++){
-                    before = image.at<Vec3b>(r,0)[channel];
-                    gc_encoded.encode_int(image.at<Vec3b>(r,0)[channel]);
-                    for(int c=2; c<image.cols; c+=2){
-                        after = image.at<Vec3b>(r,c)[channel]; 
-                        now = before - image.at<Vec3b>(r,c)[channel];
+                for(int r = 0; r < image_comp.rows; r++){
+                    before = image_comp.at<Vec3b>(r,0)[channel];
+                    gc_encoded.encode_int(image_comp.at<Vec3b>(r,0)[channel]);
+                    for(int c=2; c<image_comp.cols; c+=2){
+                        after = image_comp.at<Vec3b>(r,c)[channel]; 
+                        now = before - image_comp.at<Vec3b>(r,c)[channel];
                         if(now < 0){
                             gc_encoded.encode_int(((now*-1)<<1)+1);
                         }else{
@@ -286,12 +288,12 @@ void losslessCompress(const char* output_file, Mat image, uint8_t format = FORMA
             }   
         break;
         case FORMAT_420:
-            for(int r = 0; r < image.rows; r++){
-                before = image.at<Vec3b>(r,0)[0];
-                gc_encoded.encode_int(image.at<Vec3b>(r,0)[0]);
-                for(int c= 1; c<image.cols; c++){
-                    after = image.at<Vec3b>(r,c)[0];                             
-                    now = before - image.at<Vec3b>(r,c)[0];
+            for(int r = 0; r < image_comp.rows; r++){
+                before = image_comp.at<Vec3b>(r,0)[0];
+                gc_encoded.encode_int(image_comp.at<Vec3b>(r,0)[0]);
+                for(int c= 1; c<image_comp.cols; c++){
+                    after = image_comp.at<Vec3b>(r,c)[0];                             
+                    now = before - image_comp.at<Vec3b>(r,c)[0];
                     if(now < 0){
                         gc_encoded.encode_int(((now*-1)<<1)+1);
                     }else{
@@ -301,12 +303,12 @@ void losslessCompress(const char* output_file, Mat image, uint8_t format = FORMA
                 }
             }
             for (size_t channel = 1; channel < COLOR_CHANNELS; channel++){
-                for(int r = 1; r < image.rows; r+=2){
-                    before = image.at<Vec3b>(r,0)[channel];
-                    gc_encoded.encode_int(image.at<Vec3b>(r,0)[channel]);
-                    for(int c= 2; c<image.cols; c+=2){
-                        after = image.at<Vec3b>(r,c)[channel];                      
-                        now = before - image.at<Vec3b>(r,c)[channel];
+                for(int r = 1; r < image_comp.rows; r+=2){
+                    before = image_comp.at<Vec3b>(r,0)[channel];
+                    gc_encoded.encode_int(image_comp.at<Vec3b>(r,0)[channel]);
+                    for(int c= 2; c<image_comp.cols; c+=2){
+                        after = image_comp.at<Vec3b>(r,c)[channel];                      
+                        now = before - image_comp.at<Vec3b>(r,c)[channel];
                         if(now < 0){
                             gc_encoded.encode_int(((now*-1)<<1)+1);
                         }else{
@@ -322,10 +324,11 @@ void losslessCompress(const char* output_file, Mat image, uint8_t format = FORMA
 }
 Mat losslessDecompress(const char* input_file){
     GolombCode gc_decoded(input_file,4,'r');
-    uint32_t rows,cols,format;
+    uint32_t rows,cols,format,bits;
     rows = gc_decoded.decode_int();
     cols = gc_decoded.decode_int();
     format = gc_decoded.decode_int();
+    bits = gc_decoded.decode_int();
     Mat image(rows,cols,CV_8UC3,Scalar(0,0,0));
     switch(format){
         case FORMAT_444:
@@ -424,7 +427,8 @@ Mat losslessDecompress(const char* input_file){
         break;        
     }
     gc_decoded.close();
-    return image;
+    Mat image_decomp = decompress(image,IMG_COLOR,(uint8_t)bits);
+    return image_decomp;
 }
 Mat cvtTo422(Mat image){
     Mat imageOut(image.rows, image.cols,CV_8UC3,Scalar(0,0,0));
@@ -498,7 +502,9 @@ int main(int argc, char** argv){
     Mat image = imread(x,IMG_COLOR);
     Mat image_yuv;
     Mat image_conv;
+    char* golombFile = argv[3];
     int format = atoi(argv[4]);
+    int bits = atoi(argv[5]);
     switch(format) {
         case FORMAT_444 :
             cvtColor(image,image_yuv, COLOR_BGR2YUV);
@@ -513,8 +519,7 @@ int main(int argc, char** argv){
         break;
 
     }
-    char* golombFile = argv[3];
-    losslessCompress(golombFile,image_yuv,format);
+    losslessCompress(golombFile,image_yuv,format,bits);
 
     Mat image_yuv_lossless = losslessDecompress(golombFile);
 
@@ -548,17 +553,19 @@ int main(int argc, char** argv){
     // saveImage("../Histograms/histo.jpg",histo_image);
     saveImage("../Histograms/" + histoFile + "_histo.jpg",histo_image);
     
+    
     // saveImage("../Histograms/histo_yuv.jpg",histo_image_lossless);
     saveImage("../Histograms/" + histoFile + "_histo_yuv.jpg",histo_image_lossless);
-    cout << left << setw(16) <<  imaout.erase(0,13) << " -> ";
+    cout << left << setw(20) <<  imaout.erase(0,13) << " -> ";
     string chanels[3];
     chanels[0] = " B";
     chanels[1] = " G";
     chanels[2] = " R";
-    for(int i = 0; i<3;i++){
-        cout << left << setw(3) <<chanels[i] <<": "<< left << setw(7)<< snrYUV[i];  
-    }
-    cout << endl;
+    double med = (snrYUV[0] + snrYUV[1] + snrYUV[2])/3;
+    // for(int i = 0; i<3;i++){
+    //     cout << left << setw(3) <<chanels[i] <<": "<< left << setw(7)<< snrYUV[i];  
+    // }
+    cout  << " -> " << left << setw(7) << med << endl;
     waitKey(1);
 }
 // int main(int argc, char** argv){

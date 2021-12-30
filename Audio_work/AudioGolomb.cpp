@@ -169,7 +169,7 @@ class AudioGolomb
             audioFile.setSampleRate(sampleRate);
             audioFile.setBitDepth(bitDepth);
 
-            for (int channel = 0; channel < numChannels - 1; channel++)
+            for (int channel = 0; channel < numChannels; channel++)
             {
                 // Decode and convert the first sample of each channel
                 int initSample = decode_int();
@@ -211,7 +211,7 @@ class AudioGolomb
             audioFile.setSampleRate(sampleRate);
             audioFile.setBitDepth(bitDepth);
 
-            for (int channel = 0; channel < numChannels - 1; channel++)
+            for (int channel = 0; channel < numChannels; channel++)
             {
                 // Decode and convert the first sample of each channel
                 int initSample = decode_int();

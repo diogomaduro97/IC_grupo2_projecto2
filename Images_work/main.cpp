@@ -553,14 +553,10 @@ int main(int argc, char** argv){
     // saveImage("../Histograms/histo.jpg",histo_image);
     saveImage("../Histograms/" + histoFile + "_histo.jpg",histo_image);
     
-<<<<<<< HEAD
-    saveImage("../Histograms/histo_yuv.jpg",histo_image_lossless);
-    cout << left << setw(20) <<  imaout.erase(0,13) << " -> ";
-=======
+    
     // saveImage("../Histograms/histo_yuv.jpg",histo_image_lossless);
     saveImage("../Histograms/" + histoFile + "_histo_yuv.jpg",histo_image_lossless);
-    cout << left << setw(16) <<  imaout.erase(0,13) << " -> ";
->>>>>>> 11975a9e81d4c7ca246489477c3dbdb89c75f3af
+    cout << left << setw(20) <<  imaout.erase(0,13) << " -> ";
     string chanels[3];
     chanels[0] = " B";
     chanels[1] = " G";

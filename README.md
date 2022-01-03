@@ -12,8 +12,6 @@
   $ make
 
   -To run Audio_work:
-    run the script inside of scripts folder 
-    or
   $ cd Audio_work
   $ mkdir build && cd build
   $ cmake ../

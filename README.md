@@ -12,18 +12,26 @@
   $ make
 
   -To run Audio_work:
+  
   $ cd Audio_work
+  
   $ mkdir build && cd build
+  
   $ cmake ../
+  
   $ make
-  $ ./audioTest [arg1][arg2]
-* opencv_work:
-    Run the script inside of scripts folder 
-    or  
+  
+  $ ./audioTest [arg1][arg2]  
+* opencv_work: 
+  
   $ cd opencv_work
+  
   $ mkdir build && cd build
+  
   $ cmake ../
+  
   $ make
+  
   $ ./opencvTest [arg1][arg2]
 
 ```

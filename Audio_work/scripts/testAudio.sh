@@ -27,7 +27,7 @@ do
     # echo $losslessOut
     # echo $lossySoundOut
     # echo $lossyOut
-    ./audioTest $soundIn $losslessSoundOut $losslessOut $lossySoundOut $lossyOut
+    ./audioTest $soundIn $losslessOut $lossyOut $losslessSoundOut $lossySoundOut
     echo "--------------------"
 done
 

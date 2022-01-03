@@ -14,8 +14,8 @@
 #define HISTO_WINDOWSIZE_X 1500
 #define RECTANGLE_DIVIDER 0
 #define HISTO_SIZE 600
-#define HISTO_NUMCOLLUMS 1 //quanto maior for o numero, menos colunas aparecem
-#define SHIFT_BITS 13    // [0..7] qunato bits se filtram por cada pixel 
+#define HISTO_NUMCOLLUMS 1
+#define SHIFT_BITS 7
 
 using namespace std;
 using namespace cv;
@@ -159,9 +159,14 @@ Mat snrOnHisto(Mat histo,vector<double> snr, int numChannels ){
         - int numChannels               -> number of channels 
 */
 
-void histoToFile(vector<map<double,int>> histo,int numChannels, string name){
+void histoToFile(vector<map<double,int>> histo,int numChannels, string name, int flag=0){
     // ofstream ofs("../Histograms/histo.txt");
-    ofstream ofs("../Histograms/" + name + "_histo.txt");
+    string file;
+    if (flag)
+        file = "../Histograms/" + name + "_histoDecompressed.txt";
+    else 
+        file = "../Histograms/" + name + "_histo.txt";
+    ofstream ofs(file);
     for(int i = 0; i< numChannels; i++){
         ofs << "canal numero: " << i << endl;
         for(it = histo[i].begin(); it!=histo[i].end() ; it++ ){
@@ -180,13 +185,7 @@ void histoToFile(vector<map<double,int>> histo,int numChannels, string name){
 
 */
 
-short keep_bits_from_16( short input, int keepBits ) {
-    short prevent_offset = static_cast<unsigned short>(-1) >> keepBits+1;
-    input &= (-1 << (16-keepBits));
-    return input + prevent_offset;
-}
-
-AudioFile<double> lossyCompress(AudioFile<double> audio, uint8_t bits=SHIFT_BITS){
+AudioFile<double> compress(AudioFile<double> audio, uint8_t bits=SHIFT_BITS){
     AudioFile<double> audioOut;
     audioOut.setBitDepth(audio.getBitDepth());
     audioOut.setNumChannels(audio.getNumChannels());
@@ -197,8 +196,7 @@ AudioFile<double> lossyCompress(AudioFile<double> audio, uint8_t bits=SHIFT_BITS
         audioOut.samples[c].resize(audio.getNumSamplesPerChannel());
         for (int s = 0; s < audio.getNumSamplesPerChannel(); s++){
             int sample = (int)((audio.samples[c][s]+1)*MAX_SAMPLE_SIZE);
-            double tmp = keep_bits_from_16(sample, 10);
-            //double tmp = (double)(sample>>bits);
+            double tmp = (double)(sample>>bits);
             audioOut.samples[c][s] = (tmp/(MAX_SAMPLE_SIZE))-1;
         }
     }
@@ -216,7 +214,7 @@ AudioFile<double> lossyCompress(AudioFile<double> audio, uint8_t bits=SHIFT_BITS
         - AudioFile<double> audio_decompress  -> Audio file with bits gained 
 
 */
-AudioFile<double> lossyDecompress(AudioFile<double> audio, uint8_t bits=SHIFT_BITS){
+AudioFile<double> decompress(AudioFile<double> audio, uint8_t bits=SHIFT_BITS){
     AudioFile<double> audioOut;
     audioOut.setBitDepth(audio.getBitDepth());
     audioOut.setNumChannels(audio.getNumChannels());
@@ -234,6 +232,22 @@ AudioFile<double> lossyDecompress(AudioFile<double> audio, uint8_t bits=SHIFT_BI
     }
     return audioOut;
 }
+
+void lossyCompress(AudioFile<double> audio, const char* out_fname, uint8_t bits=SHIFT_BITS)
+{
+    AudioFile<double> audioOut;
+    audioOut = compress(audio, bits);
+    AudioGolomb ag(audioOut, 32, 'e');
+    ag.losslessEncodeTo(out_fname);
+}
+
+AudioFile<double> lossyDecompress(const char* audioFilename, uint8_t bits=SHIFT_BITS)
+{
+    AudioGolomb ag(audioFilename, 32, 'd');
+    AudioFile<double> audio = ag.decode();
+    return decompress(audio, bits);
+}
+
 /* 
     function to calculate the peak of signal to noise between an original audio and the altered audio
     input args: 
@@ -278,12 +292,6 @@ int main(int argc, char** argv) {
 
     string histoFile = fileName(argv[1]);
 
-    // const char* fileIn = argc > 1? argv[1]:"../Sounds/sample01.wav";
-    // const char* losslessFileOut = argc > 2? argv[2]:"../Sounds_Out/lossless_out.iclac";
-    // const char* lossyFileOut = argc > 2? argv[3]:"../Sounds_Out/lossy_out.wav";
-    // const char* losslessFileOutDecompressed = argc > 2? argv[4]:"../Sounds_Out/lossless_out_decompressed.wav";
-    // const char* lossyFileOutDecompressed = argc > 2? argv[5]:"../Sounds_Out/lossy_out_decompressed.wav";
-
     const char* fileIn = argc > 1? argv[1]:"../Sounds/sample01.wav";
     const char* losslessFileOut = argc > 2? argv[2]:"../Sounds_Out/lossless_out.iclac";
     const char* lossyFileOut = argc > 2? argv[3]:"../Sounds_Out/lossy_out.wav";
@@ -294,10 +302,10 @@ int main(int argc, char** argv) {
     audioFile.load(fileIn);
     int numChannels = audioFile.getNumChannels();
 
-    AudioGolomb audioGolombCompress(fileIn, 256, 'e');
+    AudioGolomb audioGolombCompress(fileIn, 512, 'e');
     audioGolombCompress.losslessEncodeTo(losslessFileOut);
 
-    AudioGolomb audioGolombDecompress(losslessFileOut, 256, 'd');
+    AudioGolomb audioGolombDecompress(losslessFileOut, 512, 'd');
     audioGolombDecompress.losslessDecodeTo(losslessFileOutDecompressed);
 
     // Create AudioFileOut
@@ -306,16 +314,16 @@ int main(int argc, char** argv) {
     bool ok;
     tie(audioFile_out,histo,ok) = copyAudioFile(audioFile);
     vector<double> entropy = histoEntropy(histo,numChannels,audioFile.getNumSamplesPerChannel());
-    histoToFile(histo,numChannels,histoFile);
+    histoToFile(histo,numChannels,histoFile, 0);
     // or, just use this quick shortcut to print a summary to the console
     //if(ok) audioFile_out.save(fileOut);
     
-    AudioFile<double> audio_out_compressed = lossyCompress(audioFile, 14);
-    audio_out_compressed.save(lossyFileOut);
-    AudioFile<double> audio_out_decompressed = lossyDecompress(audio_out_compressed, 14);
+    lossyCompress(audioFile, lossyFileOut);
+    AudioFile<double> audio_out_decompressed = lossyDecompress(lossyFileOut);
     audio_out_decompressed.save(lossyFileOutDecompressed);
     vector<map<double,int>> histo_decompressed = generate_histogram(audio_out_decompressed);
     vector<double> entropy_decompressed = histoEntropy(histo_decompressed,numChannels,audioFile.getNumSamplesPerChannel());
+    histoToFile(histo_decompressed, numChannels, histoFile, 1);
     
     vector<double> psnr = signalToNoise(audioFile,audio_out_decompressed);
     for (int i = 0; i < numChannels; i++)

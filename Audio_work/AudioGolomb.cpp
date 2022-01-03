@@ -30,6 +30,21 @@ class AudioGolomb
                 rMax = floor(log2(m-1));
             }
         }
+        AudioGolomb(AudioFile<double> audio, uint32_t m, char op)
+        {
+            if(op == 'e')
+            {
+                audioFile = audio;
+                mconst = m;
+                rMax = floor(log2(m-1));
+            }
+            else if(op == 'd')
+            {
+                audioFile = audio;
+                mconst = m;
+                rMax = floor(log2(m-1));
+            }
+        }
 
         // Encode signed int
         void encode_int(int value)
@@ -154,7 +169,7 @@ class AudioGolomb
             audioFile.setSampleRate(sampleRate);
             audioFile.setBitDepth(bitDepth);
 
-            for (int channel = 0; channel < numChannels - 1; channel++)
+            for (int channel = 0; channel < numChannels; channel++)
             {
                 // Decode and convert the first sample of each channel
                 int initSample = decode_int();
@@ -178,6 +193,48 @@ class AudioGolomb
                 }
             }
             audioFile.save(fout);
+        }
+
+        AudioFile<double> decode()
+        {
+            bofs.open(encodedFilename, 'r');
+
+            // Decode audioFile parameters 
+            int numChannels = decode_int();
+            int numSamples = decode_int();
+            int sampleRate = decode_int();
+            int bitDepth = decode_int();
+            
+            // Set previouly decoded parameters
+            audioFile.setNumChannels(numChannels);
+            audioFile.setNumSamplesPerChannel(numSamples);
+            audioFile.setSampleRate(sampleRate);
+            audioFile.setBitDepth(bitDepth);
+
+            for (int channel = 0; channel < numChannels; channel++)
+            {
+                // Decode and convert the first sample of each channel
+                int initSample = decode_int();
+                audioFile.samples[channel][0] = (initSample/MAX_SAMPLE_SIZE)-1;
+                
+                for (int i = 1; i < numSamples; i++)
+                {
+                    // Get the last sample
+                    int lastSample = (int)((audioFile.samples[channel][i-1]+1)*MAX_SAMPLE_SIZE);
+
+                    // Decode de current computed value
+                    int decoded_value = decode_int();
+
+                    // The current sample is computed using the inverse of the encoding algorithm
+                    // Value = sample_A - sample_B
+                    // sample_B = sample_A - Value
+                    int sample = lastSample - decoded_value;
+
+                    // Convert back the sample value
+                    audioFile.samples[channel][i] = (sample/MAX_SAMPLE_SIZE)-1;
+                }
+            }
+            return audioFile;
         }
 };
 

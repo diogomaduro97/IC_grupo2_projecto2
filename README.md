@@ -1,1 +1,33 @@
-# IC_grupo2_projecto2
+# IC_grupo2
+
+
+## How to run
+
+* Audio_work:
+  -Instalation of the Adam Stark's library:$ cd Audio_work
+  $ git clone git@github.com:adamstark/AudioFile.git
+  $ cd AudioFile
+  $ mkdir build && cd build
+  $ cmake ../
+  $ make
+
+  -To run Audio_work:
+    run the script inside of scripts folder 
+    or
+  $ cd Audio_work
+  $ mkdir build && cd build
+  $ cmake ../
+  $ make
+  $ ./audioTest [arg1][arg2]
+* opencv_work:
+    Run the script inside of scripts folder 
+    or  
+  $ cd opencv_work
+  $ mkdir build && cd build
+  $ cmake ../
+  $ make
+  $ ./opencvTest [arg1][arg2]
+
+```
+
+```
